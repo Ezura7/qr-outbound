@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>QR Code Manual Outbound</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    textarea {
+      width: 100%;
+      height: 150px;
+      font-size: 16px;
+    }
+    .qrcode-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .qrcode-item {
+      text-align: center;
+    }
+    canvas {
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h2>QR Code Manual Outbound</h2>
+  <p>Masukkan Nomor pengikat/seal Karung:</p>
+  <textarea id="inputText" placeholder="Contoh: SEAL001... satu per baris"></textarea><br><br>
+  <button onclick="generateQRCodes()">Generate QR Codes</button>
+
+  <div class="qrcode-box" id="qrcodeContainer"></div>
+
+  <!-- Logo base64 AnterAja -->
+  <img id="logoImg" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAABkCAYAAABOR/mrAAAACXBIWXMAAAsTAAALEwEAmpwYAAACf0lEQVR4nO3dMWrCQBBA0Un///lFxDIlFht2VGQduvGiS7iwzfsByU7wTkxVp2uxVAAAAAAAAAAAAAAAAAAAAAAAAAAD4G/gKcXeYeH3Th0ZKPO+axtPbHYuwb5nYz97K2ZtvYGHbHb7ePOu83M9+L+0Zh8Zlu9W4++R9gWmj1T0++r7TVGv2vULS2BnddBmbkz4elTY3XjC7aPzSzbt9j0U6y+7lKcW9+cbXt+bUrGHTrHtZrOpuzXDjf6C+zTTt7Lo1YNbmzRyrG3zfXun7PXpTWp7xY0tX7ZXPrmY0O2Vyy3k0sxWZc3HLfr1a6e2tZkvFONbbt12+XMz5m4q9H1u7HPox3bi2zW+rctZ76VLZb28iSttZo3T2cp9St+Wrc2yfUlZ02OfC3nZpMb8S8a5bpycY4Zt9edxeU86zPV2WzH2e9UJvbzfOPmTLkfzQ0t5UdTXu1djTtk7YXZb8xeybnVZ0n75b56L0eMr6p54Z2OWX9oM+1/wv95sQ+AAAAAElFTkSuQmCC" style="display:none" />
+
+  <script>
+    function generateQRCodes() {
+      const input = document.getElementById("inputText").value.trim();
+      const lines = input.split('\n').filter(line => line.trim() !== "");
+      const container = document.getElementById("qrcodeContainer");
+      const logo = document.getElementById("logoImg");
+      container.innerHTML = "";
+
+      lines.forEach((text) => {
+        const div = document.createElement("div");
+        div.className = "qrcode-item";
+
+        const label = document.createElement("p");
+        label.innerText = text;
+
+        const qrDiv = document.createElement("div");
+        div.appendChild(label);
+        div.appendChild(qrDiv);
+        container.appendChild(div);
+
+        const qr = new QRCode(qrDiv, {
+          text: text,
+          width: 150,
+          height: 150,
+          colorDark: "#000000",
+          colorLight: "#ffffff"
+        });
+
+        // Tambahkan watermark & logo setelah QR selesai dirender
+        setTimeout(() => {
+          const canvas = qrDiv.querySelector("canvas");
+          if (!canvas) return;
+
+          const ctx = canvas.getContext("2d");
+
+          const qrImage = new Image();
+          qrImage.src = canvas.toDataURL();
+
+          qrImage.onload = () => {
+            const logoImage = new Image();
+            logoImage.src = logo.src;
+
+            logoImage.onload = () => {
+              // Gambar ulang dengan latar logo transparan
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              ctx.globalAlpha = 0.2;
+              ctx.drawImage(logoImage, 0, 0, canvas.width, canvas.height);
+              ctx.globalAlpha = 1.0;
+
+              ctx.drawImage(qrImage, 0, 0, canvas.width, canvas.height);
+
+              // Tambah watermark
+              ctx.font = "10px Arial";
+              ctx.fillStyle = "rgba(0,0,0,0.6)";
+              ctx.textAlign = "right";
+              ctx.fillText("KrisnaAprian", canvas.width - 5, canvas.height - 5);
+            };
+
+            logoImage.onerror = () => {
+              // Jika logo gagal dimuat
+              ctx.drawImage(qrImage, 0, 0, canvas.width, canvas.height);
+              ctx.font = "10px Arial";
+              ctx.fillStyle = "rgba(0,0,0,0.6)";
+              ctx.textAlign = "right";
+              ctx.fillText("KrisnaAprian", canvas.width - 5, canvas.height - 5);
+            };
+          };
+        }, 200);
+      });
+    }
+  </script>
+</body>
+</html>
